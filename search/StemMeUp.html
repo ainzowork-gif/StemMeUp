@@ -1,0 +1,157 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StemMeUp Search Engine</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 100px;
+            font-size: 45px;
+        }
+
+        form {
+            margin-top: 30px;
+        }
+
+        input {
+            width: 400px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background-color: black;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #results {
+            width: 70%;
+            margin: 40px auto;
+            text-align: left;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+        }
+
+        .result-item a {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>StemMeUp</h1>
+
+    <form>
+        <input
+            type="text"
+            id="q"
+            placeholder="Search anything..."
+        >
+
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        const form = document.querySelector("form");
+        const searchInput = document.getElementById("q");
+        const resultsDiv = document.getElementById("results");
+
+        form.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const query = searchInput.value.trim();
+
+            if (!query) return;
+
+            resultsDiv.innerHTML = "<p>Searching...</p>";
+
+            try {
+
+                const response = await fetch("http://127.0.0.1:8000/search", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        query: query
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("API Error");
+                }
+
+                const data = await response.json();
+
+                resultsDiv.innerHTML = "";
+
+                if (!data.results || data.results.length === 0) {
+                    resultsDiv.innerHTML = "<p>No results found.</p>";
+                    return;
+                }
+
+                data.results.forEach(function(page) {
+
+                    const resultItem = document.createElement("div");
+                    resultItem.className = "result-item";
+
+                    const title = document.createElement("h3");
+                    title.textContent = page.title || "No title";
+
+                    const link = document.createElement("a");
+                    link.href = page.url;
+                    link.textContent = page.url;
+                    link.target = "_blank";
+
+                    const content = document.createElement("p");
+                    content.textContent = page.content || "";
+
+                    resultItem.appendChild(title);
+                    resultItem.appendChild(link);
+                    resultItem.appendChild(content);
+
+                    resultsDiv.appendChild(resultItem);
+
+                });
+
+            } catch (error) {
+
+                resultsDiv.innerHTML = "<p>Search error: " + error.message + "</p>";
+                console.error(error);
+
+            }
+
+        });
+    </script>
+
+</body>
+</html>
+```

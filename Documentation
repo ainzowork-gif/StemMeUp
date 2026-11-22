@@ -1,0 +1,32 @@
+start: 2.27 PM 11/21
+
+task:
+1- indexing
+  - data_collection (articles.json)
+  - preprocessing:
+    - lowercase & punctuation handling (str.maketrans)
+    - tokenization (.split())
+    - stop_words filtering (set lookup) & stemming (PorterStemmer)
+  - inverted_index (built & saved to inverted.json)
+
+notes:
+- fixed string immutability & list/reduce bugs
+- stored stemmed tokens per page_id in dict
+- built inverted_index mapping terms to page_ids
+
+end: 5.17 PM
+
+start: 6.00 PM 11/21
+
+task:
+1- indexing (search)
+  - search_fun.py (clean_query & search_query functions)
+  - query execution from external runner (loading inverted.json)
+
+notes:
+- separated search functions into search_fun.py
+- fixed undefined clean_query reference & import setup
+end: 7.12 PM
+
+
+start: 2.24 PM 
