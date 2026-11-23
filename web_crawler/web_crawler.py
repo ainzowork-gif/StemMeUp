@@ -1,9 +1,12 @@
-# # Function takes html code from web page
-import requests
+from collections import deque
+import time
+from urllib.parse import urldefrag, urljoin, urlparse
+
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+import requests
 
 
+# Function takes html code from web page
 def take_html(url: str) -> str | None:
   headers = {"User-Agent": "Mozilla/5.0"}
   try:
@@ -15,15 +18,16 @@ def take_html(url: str) -> str | None:
     return None
 
 
-# # Function to extract title
-def extract_title(soup) -> str:
+# Function to extract title
+def extract_title(soup: BeautifulSoup) -> str:
+      #see the title and make sure that he have contant (Ahmed)
   if soup.title and soup.title.string:
     return soup.title.string.strip()
   return ""
 
 
-# # Function to clean content and review
-def extract_clean_text(soup) -> str:
+# Function to clean content and review
+def extract_clean_text(soup: BeautifulSoup) -> str:
   for tag in soup(["script", "style", "noscript"]):
     tag.decompose()
 
@@ -31,29 +35,104 @@ def extract_clean_text(soup) -> str:
   return " ".join(raw_text.split())
 
 
-# # Function of extract_links of pages
-def extract_links(soup, base_url: str) -> list[str]:
+# Function to extract links from page
+def extract_links(soup: BeautifulSoup, base_url: str) -> list[str]:
   links = []
+  #the loop check if the a syntax have a real url
   for a in soup.find_all("a", href=True):
     full_link = urljoin(base_url, a["href"].strip())
-    if full_link.startswith(("http://", "https://")):
-      links.append(full_link)
-  return links
+    clean_link, _ = urldefrag(full_link)
+    if clean_link.startswith(("http://", "https://")):
+      links.append(clean_link)
+  return list(dict.fromkeys(links))
 
+
+# Check if URL belongs to the same domain
+def is_same_domain(url: str, base_url: str) -> bool:
+  return urlparse(url).netloc.lower() == urlparse(base_url).netloc.lower()
+
+
+# Crawl website starting from start_url
+def crawl_website(start_urls: list[str], max_pages: int = 20) -> list[dict]:
+    
+    # Make sure start_urls is a list
+    if isinstance(start_urls, str):
+        start_urls = [start_urls]
+
+    # Remove fragments and duplicate URLs
+    clean_start_urls = []
+
+    for url in start_urls:
+        clean_url, _ = urldefrag(url)
+
+        if clean_url not in clean_start_urls:
+            clean_start_urls.append(clean_url)
+
+    # Add all starting URLs to the queue
+    url_queue = deque(clean_start_urls)
+
+    # Track visited URLs
+    visited = set()
+
+    # Store successfully crawled pages
+    crawled_pages = []
+
+    while url_queue and len(crawled_pages) < max_pages:
+
+        current_url = url_queue.popleft()
+
+        if current_url in visited:
+            continue
+
+        visited.add(current_url)
+
+        print("Crawling:", current_url)
+
+        html = take_html(current_url)
+
+        if not html:
+            continue
+
+        soup = BeautifulSoup(html, "html.parser")
+
+        title = extract_title(soup)
+        content = extract_clean_text(soup)
+        links = extract_links(soup, current_url)
+
+        page_data = {
+            "url": current_url,
+            "title": title,
+            "content": content,
+            "links": links,
+        }
+
+        crawled_pages.append(page_data)
+
+        # Add links from the current page
+        for link in links:
+
+            if (
+                link not in visited
+                and link not in url_queue
+            ):
+                url_queue.append(link)
+
+        time.sleep(1)
+
+    print("\nCrawling finished")
+    print("Visited pages:", len(visited))
+    print("Successfully collected pages:", len(crawled_pages))
+    print("URLs still waiting:", len(url_queue))
+    return crawled_pages
 
 if __name__ == "__main__":
-  url = "https://example.com"  # Put url link
-  headers = {"User-Agent": "Mozilla/5.0"}
+  start_url =[]
+  max_pages = 100
 
-  response = requests.get(url, headers=headers, timeout=10)
-  soup = BeautifulSoup(response.text, "html.parser")
+  pages = crawl_website(start_url, max_pages)
 
-  print(extract_title(soup))
-
-  clean_text = extract_clean_text(soup)
-  print("Length:", len(clean_text))
-  print("Sample:", clean_text[:300])
-
-  page_links = extract_links(soup, url)
-  print("Total links:", len(page_links))
-  print("First 5 links:", page_links[:5])
+  print("\nTotal pages:", len(pages))
+  for page in pages:
+    print("\nTitle:", page["title"])
+    print("URL:", page["url"])
+    print("Content length:", len(page["content"]))

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StemMeUp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --accent:#1c7a52; --ink:#15181b; --muted:#5f676d; --line:#dfe3e1;
+    --tint: color-mix(in srgb, var(--accent) 10%, #fff);
+    --tint2: color-mix(in srgb, var(--accent) 18%, #fff);
+    --deep: color-mix(in srgb, var(--accent) 70%, #000);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); min-height:100vh;
+         display:flex; flex-direction:column; align-items:center; padding:0 18px; position:relative; overflow-x:hidden;
+         background: radial-gradient(1200px 600px at 50% -10%, var(--tint2), transparent 70%), #fbfdfc; }
+
+  /* ---------- decorative shapes ---------- */
+  .shapes { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .shapes > * { position:absolute; transition:opacity .4s; }
+  .blob  { border-radius:50%; background:var(--tint2); }
+  .b1 { width:420px; height:420px; left:-140px; top:18%; opacity:.7; }
+  .b2 { width:300px; height:300px; right:-90px; bottom:8%; background:var(--tint); }
+  .ring { border-radius:50%; border:2px solid color-mix(in srgb, var(--accent) 28%, transparent); }
+  .r1 { width:150px; height:150px; right:12%; top:16%; }
+  .r2 { width:70px; height:70px; left:14%; bottom:16%; }
+  .dots { width:150px; height:110px; background-image:radial-gradient(color-mix(in srgb, var(--accent) 45%, transparent) 2px, transparent 2.5px); background-size:22px 22px; }
+  .d1 { left:8%; top:12%; } .d2 { right:9%; bottom:20%; }
+  .leaf { fill:var(--accent); opacity:.16; }
+  .l1 { width:130px; right:20%; bottom:26%; transform:rotate(18deg); animation:sway 7s ease-in-out infinite; }
+  .l2 { width:90px; left:22%; top:30%; transform:rotate(-28deg) scaleX(-1); animation:sway 9s ease-in-out infinite reverse; }
+  .l3 { width:60px; right:30%; top:10%; transform:rotate(40deg); animation:sway 8s ease-in-out infinite; }
+  @keyframes sway { 0%,100% { translate:0 0; } 50% { translate:0 -14px; } }
+  @media (prefers-reduced-motion: reduce) { .leaf { animation:none !important; } }
+  body.has-results .shapes > * { opacity:.35; }
+
+  header, main { position:relative; z-index:1; }
+  header { padding-top:40px; display:flex; align-items:center; gap:10px; }
+  header span { font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+
+  main { flex:1; width:100%; max-width:700px; display:flex; flex-direction:column; align-items:center;
+         justify-content:center; padding-bottom:10vh; }
+  body.has-results main { justify-content:flex-start; padding:28px 0 70px; }
+
+  form { width:100%; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .field { width:100%; height:62px; display:flex; align-items:center; gap:14px; padding:0 8px 0 22px; background:#fff;
+           border:1.5px solid var(--line); border-radius:999px;
+           box-shadow:0 2px 4px rgba(20,24,28,.04), 0 14px 34px color-mix(in srgb, var(--accent) 14%, transparent);
+           transition:border-color .15s, box-shadow .15s; }
+  .field:focus-within { border-color:var(--accent);
+           box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent), 0 14px 34px color-mix(in srgb, var(--accent) 14%, transparent); }
+  input { flex:1; min-width:0; border:0; outline:0; background:transparent; font:inherit; font-size:17px; height:100%; }
+  #go { height:46px; padding:0 26px; background:var(--accent); color:#fff; border:0; border-radius:999px;
+        font:inherit; font-size:15px; font-weight:700; cursor:pointer; transition:transform .1s, background .15s; }
+  #go:hover { background:var(--deep); } #go:active { transform:scale(.97); } #go:disabled { opacity:.55; cursor:wait; }
+
+  #status { width:100%; margin-top:22px; font-size:14px; color:var(--muted); text-align:center; }
+  #status.error { color:#b3261e; background:#fdf0ee; border:1px solid #f4cdc8; padding:12px 16px; border-radius:14px; text-align:left; }
+  #results { width:100%; list-style:none; margin-top:10px; display:grid; gap:12px; }
+  #results li { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px 20px;
+                box-shadow:0 1px 2px rgba(20,24,28,.04); transition:transform .15s, box-shadow .15s, border-color .15s; }
+  #results li:hover { transform:translateY(-2px); border-color:color-mix(in srgb, var(--accent) 40%, var(--line));
+                      box-shadow:0 10px 26px color-mix(in srgb, var(--accent) 12%, transparent); }
+  #results a { font-size:18px; font-weight:700; color:var(--deep); text-decoration:none; }
+  #results a:hover { text-decoration:underline; }
+  #results .url { font-size:13px; color:var(--accent); margin:3px 0 6px; word-break:break-all; }
+  #results .snippet { font-size:15px; line-height:1.55; color:var(--muted); }
+
+  footer { position:relative; z-index:1; padding:0 0 22px; font-size:13px; color:var(--muted); }
+  body.has-results footer { display:none; }
+  @media (max-width:600px) { .b1,.b2 { opacity:.4; } .l1,.l3,.r1 { display:none; } }
+</style>
+<!-- Runtime config: generated at container start from env vars (see docker/). Safe defaults if missing. -->
+<script src="config.js"></script>
+</head>
+<body>
+<div class="shapes" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="ring r1"></div><div class="ring r2"></div>
+  <div class="dots d1"></div><div class="dots d2"></div>
+  <svg class="leaf l1" viewBox="0 0 30 30"><path d="M15 14C15 8.5 11 5.5 5 5.5C5 11 8.5 14 15 14Z"/><path d="M15 11C15 6.5 18.5 3.5 24.5 3.5C24.5 8.5 21 11 15 11Z"/></svg>
+  <svg class="leaf l2" viewBox="0 0 30 30"><path d="M15 14C15 8.5 11 5.5 5 5.5C5 11 8.5 14 15 14Z"/><path d="M15 11C15 6.5 18.5 3.5 24.5 3.5C24.5 8.5 21 11 15 11Z"/></svg>
+  <svg class="leaf l3" viewBox="0 0 30 30"><path d="M15 11C15 6.5 18.5 3.5 24.5 3.5C24.5 8.5 21 11 15 11Z"/></svg>
+</div>
+
+<header>
+  <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+    <path d="M15 27V13" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M15 14C15 8.5 11 5.5 5 5.5C5 11 8.5 14 15 14Z" fill="var(--accent)"/>
+    <path d="M15 11C15 6.5 18.5 3.5 24.5 3.5C24.5 8.5 21 11 15 11Z" fill="var(--accent)"/>
+  </svg>
+  <span id="brand">StemMeUp</span>
+</header>
+
+<main>
+  <form id="form" role="search">
+    <label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search</label>
+    <div class="field">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none">
+        <circle cx="8.5" cy="8.5" r="5.75" stroke="#6b7177" stroke-width="1.75"/>
+        <path d="M13 13L17.25 17.25" stroke="#6b7177" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+      <input id="q" name="q" type="search" placeholder="Search the web" autocomplete="off" autofocus>
+      <button id="go" type="submit">Search</button>
+    </div>
+  </form>
+
+  <div id="status" role="status" aria-live="polite"></div>
+  <ul id="results"></ul>
+</main>
+<footer>StemMeUp</footer>
+
+<script>
+(() => {
+  // ---- Config (every key can be overridden by env var -> config.js) ----
+  const C = Object.assign({
+    APP_NAME: 'StemMeUp',
+    ACCENT: '#1c7a52',
+    API_URL: '/api/search',      // endpoint; same-origin /api is proxied by nginx (keeps the key server-side)
+    API_METHOD: 'GET',           // GET | POST
+    API_QUERY_PARAM: 'q',        // GET: ?q=...   POST: {"q": "..."}
+    API_EXTRA_PARAMS: '',        // e.g. "limit=10&lang=en"
+    API_KEY: '',                 // only for direct calls; prefer the nginx proxy
+    API_KEY_HEADER: 'Authorization',
+    API_KEY_PREFIX: 'Bearer ',
+    RESULTS_PATH: 'results',     // path to the array in the JSON response ("" = response is the array)
+    TITLE_FIELD: 'title',
+    URL_FIELD: 'url',
+    SNIPPET_FIELD: 'snippet',
+    TIMEOUT_MS: 10000
+  }, window.__STEMMEUP_CONFIG__ || {});
+
+  document.documentElement.style.setProperty('--accent', C.ACCENT);
+  document.title = C.APP_NAME;
+  document.getElementById('brand').textContent = C.APP_NAME;
+
+  const $ = id => document.getElementById(id);
+  const get = (obj, path) => !path ? obj : String(path).split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+
+  async function search(q) {
+    const headers = { 'Accept': 'application/json' };
+    if (C.API_KEY) headers[C.API_KEY_HEADER] = C.API_KEY_PREFIX + C.API_KEY;
+    const extra = new URLSearchParams(C.API_EXTRA_PARAMS);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), Number(C.TIMEOUT_MS));
+    try {
+      let res;
+      if (String(C.API_METHOD).toUpperCase() === 'POST') {
+        headers['Content-Type'] = 'application/json';
+        const body = Object.fromEntries(extra); body[C.API_QUERY_PARAM] = q;
+        res = await fetch(C.API_URL, { method: 'POST', headers, body: JSON.stringify(body), signal: ctrl.signal });
+      } else {
+        const u = new URL(C.API_URL, location.href);
+        extra.forEach((v, k) => u.searchParams.set(k, v));
+        u.searchParams.set(C.API_QUERY_PARAM, q);
+        res = await fetch(u, { headers, signal: ctrl.signal });
+      }
+      if (!res.ok) throw new Error('API responded ' + res.status);
+      return await res.json();
+    } finally { clearTimeout(timer); }
+  }
+
+  function render(data) {
+    const list = get(data, C.RESULTS_PATH);
+    const ul = $('results'); ul.textContent = '';
+    if (!Array.isArray(list) || !list.length) { $('status').textContent = 'No results.'; return; }
+    $('status').textContent = '';
+    for (const item of list) {
+      const li = document.createElement('li');
+      const url = get(item, C.URL_FIELD) || '#';
+      const a = document.createElement('a');
+      a.href = /^https?:\/\//i.test(url) ? url : '#';   // block javascript: URLs
+      a.textContent = get(item, C.TITLE_FIELD) || url;
+      a.rel = 'noopener noreferrer'; a.target = '_blank';
+      const u = document.createElement('div'); u.className = 'url'; u.textContent = url;
+      const s = document.createElement('div'); s.className = 'snippet'; s.textContent = get(item, C.SNIPPET_FIELD) || '';
+      li.append(a, u, s); ul.append(li);
+    }
+  }
+
+  async function run(q) {
+    q = q.trim(); if (!q) return;
+    $('go').disabled = true; $('status').className = ''; $('status').textContent = 'Searching…';
+    document.body.classList.add('has-results');
+    try { render(await search(q)); }
+    catch (e) {
+      $('results').textContent = '';
+      $('status').className = 'error';
+      $('status').textContent = e.name === 'AbortError' ? 'Request timed out.' : 'Search failed: ' + e.message;
+    } finally { $('go').disabled = false; }
+  }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const q = $('q').value.trim(); if (!q) return;
+    history.replaceState(null, '', '?q=' + encodeURIComponent(q));
+    run(q);
+  });
+  const initial = new URLSearchParams(location.search).get('q');
+  if (initial) { $('q').value = initial; run(initial); }
+})();
+</script>
+</body>
+</html>

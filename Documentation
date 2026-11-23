@@ -29,4 +29,38 @@ notes:
 end: 7.12 PM
 
 
-start: 2.24 PM 
+start: 2.24 PM 11/22
+
+task:
+1- Pipeline & API Integration
+   - reviewed the pipeline and checked the integration between its components
+   - created API using FastAPI to connect the backend with the frontend
+   - created the UI for StemMeUp search engine
+   - connected the search interface with the API
+
+notes:
+- search functionality currently has some issues and does not work as expected
+- the current code requires a thorough review and debugging
+- further testing and improvements are needed before considering the search engine fully functional
+
+ In progress 
+ UPLODE TO GIT 
+
+ start: 5.30
+  so lets the  proplem 
+  pipeline i think its have a broblem
+  api.py ai write the code i must check or re write
+  the browser save the search emgine
+  after debug
+  pipeline seem to be good
+  so i fix the crawler but i need to review
+  end:7.04
+  
+  start: 2.06 AM 23/11
+  tasks 
+  1 review crawler fix
+  done
+  review done
+  i fixed the ui we will not use it in the end
+  every thing work now proppley
+  end: 3.18 AM 23/11

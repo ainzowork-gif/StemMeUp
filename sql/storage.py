@@ -88,3 +88,14 @@ def get_page(conn: sqlite3.Connection, page_id: int) -> dict | None:
         )
     ]
     return page
+#add from ahmed
+def get_all_pages(conn):
+    """
+    Retrieve all pages stored in the database.
+    """
+
+    rows = conn.execute(
+        "SELECT id, url, title, content FROM pages"
+    ).fetchall()
+
+    return [dict(row) for row in rows]
